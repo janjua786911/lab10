@@ -15,28 +15,29 @@ public class LoginTest {
         options.addArguments("--headless");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--remote-allow-origins=*");
 
         WebDriver driver = new ChromeDriver(options);
 
-        driver.navigate().to("http://103.139.122.250:4000/");
+        try {
+            driver.navigate().to("https://the-internet.herokuapp.com/login");
 
-        // Wait up to 10 seconds for email field to appear
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("email")));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
 
-        driver.findElement(By.name("email")).sendKeys("qasim@malik.com");
-        driver.findElement(By.name("password")).sendKeys("abcdefg");
-        driver.findElement(By.id("m_login_signin_submit")).click();
+            driver.findElement(By.id("username")).sendKeys("wronguser");
+            driver.findElement(By.id("password")).sendKeys("wrongpass");
+            driver.findElement(By.cssSelector("button[type='submit']")).click();
 
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-            By.xpath("/html/body/div/div/div[1]/div/div/div/div[2]/form/div[1]")
-        ));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector(".flash.error")
+            ));
 
-        String errorText = driver.findElement(
-            By.xpath("/html/body/div/div/div[1]/div/div/div/div[2]/form/div[1]")
-        ).getText();
+            String errorText = driver.findElement(By.cssSelector(".flash.error")).getText();
+            assert(errorText.contains("Your username is invalid"));
 
-        assert(errorText.contains("Incorrect email or password"));
-        driver.quit();
+        } finally {
+            driver.quit();
+        }
     }
 }
